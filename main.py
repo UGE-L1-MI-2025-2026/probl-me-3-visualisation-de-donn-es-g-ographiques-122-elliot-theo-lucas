@@ -9,8 +9,8 @@ if __name__ == "__main__":
     drawer = Drawer()
     extractor = Extractor()
 
-    print(extractor.get(47))
+    infos = extractor.get(47)
 
-    drawer.polygons.append(Polygon(sf.shape(47).points))
+    drawer.polygons.append(Polygon(infos["points"], infos["bbox"]))
 
     drawer.run()
