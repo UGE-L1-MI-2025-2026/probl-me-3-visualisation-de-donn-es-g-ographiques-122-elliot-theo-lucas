@@ -1,16 +1,16 @@
-from draw import Drawer
+from draw import Drawer, Polygon
 from shapefile import Reader
+from data import Extractor
 
 if __name__ == "__main__":
     sf = Reader("fr_100km.shp")
     sf.records()
 
     drawer = Drawer()
+    extractor = Extractor()
 
-    def draw():
-        print(sf.shape(47).points)
-        drawer.add_polygon(sf.shape(47).points)
+    print(extractor.get(47))
 
-    drawer.functions.append(draw)
+    drawer.polygons.append(Polygon(sf.shape(47).points))
 
     drawer.run()
