@@ -8,7 +8,8 @@ if __name__ == "__main__":
     drawer = Drawer()
 
     def draw():
-        drawer.draw_departement(sf.shape(75).points)
+        print(sf.shape(47).points)
+        drawer.add_polygon(sf.shape(47).points)
 
     drawer.functions.append(draw)
 

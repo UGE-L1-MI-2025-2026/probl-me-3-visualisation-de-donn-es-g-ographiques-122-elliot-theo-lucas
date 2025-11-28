@@ -8,11 +8,13 @@ class Drawer:
         self.window : Tuple[int, int] = 1000, 500
         fltk.cree_fenetre(self.window[0], self.window[1])
 
+        self.thickness : float = 2.0
+
         self.functions : List[function] = []
+        self.polygons : List[int] = []
     
-    @staticmethod
-    def draw_departement(points : List[Tuple[float, float]]) -> None:
-        fltk.polygone(points)
+    def add_polygon(self, points : List[Tuple[float, float]], colour : str = "black", fill : str = "") -> None:
+        self.polygons.append(fltk.polygone(points, couleur = colour, remplissage = fill, epaisseur = self.thickness))
 
     def run(self) -> int:
 
