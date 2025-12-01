@@ -2,7 +2,7 @@ import shapefile
 
 class Extractor:
     def __init__(self):
-        self.sf: shapefile.Reader = shapefile.Reader("fr_100km.shp")
+        self.sf: shapefile.Reader = shapefile.Reader("src/departements-20140306-50m")
 
     def get(self, shape_id: int):
         info = {}

@@ -3,8 +3,6 @@ from shapefile import Reader
 from data import Extractor
 
 if __name__ == "__main__":
-    sf = Reader("fr_100km.shp")
-    sf.records()
 
     drawer = Drawer()
     extractor = Extractor()

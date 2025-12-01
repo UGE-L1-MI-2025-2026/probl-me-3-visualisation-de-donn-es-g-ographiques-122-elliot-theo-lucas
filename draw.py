@@ -13,13 +13,15 @@ class Polygon:
     def draw(self) -> int:
         return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
 
-    def scale(self, factor : float, base_pos : Tuple[int, int]) -> None:
+    def scale(self, factor : float) -> None:
         for i in range(len(self.points)):
-            self.points[i] = (
-                base_pos[0] + (self.points[i][0] - base_pos[0]) * factor, 
-                base_pos[1] + (self.points[i][1] - base_pos[1]) * factor
-            )
+            self.points[i] = self.points[i][0] * factor, self.points[i][1] * factor
         self.recalc_bbox()
+
+    def translate(self, offset : Tuple[int, int]) -> None:
+        for i in range(len(self.points)):
+            self.points[i] = self.points[i][0] + offset[0], self.points[i][1] + offset[1]
+        self.bbox = self.bbox[0] + offset[0], self.bbox[1] + offset[0], self.bbox[2] + offset[1], self.bbox[3] + offset[1]
 
     def recalc_bbox(self) -> None:
         minw : float = self.points[0][0]; maxw : float = self.points[0][1]; minh : float = self.points[0][0]; maxh : float = self.points[0][1]
@@ -54,24 +56,33 @@ class Drawer:
             if polygon.bbox[3] > maxh: maxh = polygon.bbox[3]
 
         factor : float = 0
+        average : Tuple[float, float] = 0, 0
+        windows_middle : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
+
         if (maxw - minw) * (maxh - minh) != 0: 
             factor = min(self.window[0] / (maxw - minw), self.window[1] / (maxh - minh))
-        base_pos : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
 
         for polygon in self.polygons:
-            polygon.scale(factor, base_pos)
+            polygon.scale(factor)
+
+            average = 0, 0
+            for i in range(len(polygon.points)):
+                average = average[0] + polygon.points[i][0], average[1] + polygon.points[i][1]
+            average = -average[0] / len(polygon.points) + windows_middle[0], -average[1] / len(polygon.points) + windows_middle[1]
+            polygon.translate(average)
+
 
     def run(self) -> int:
 
         return_code : int = 0
+
+        self.update_polygon_points()
 
         while True:
             event = fltk.donne_ev()
             event_type = fltk.type_ev(event)
 
             fltk.efface_tout()
-
-            self.update_polygon_points()
 
             for p in self.polygons: p.draw()
             for f in self.functions: f()
