@@ -7,7 +7,7 @@ if __name__ == "__main__":
     drawer = Drawer()
     extractor = Extractor()
 
-    infos = extractor.get(47)
+    infos = extractor.get(77)
 
     drawer.polygons.append(Polygon(infos["points"], infos["bbox"]))
 

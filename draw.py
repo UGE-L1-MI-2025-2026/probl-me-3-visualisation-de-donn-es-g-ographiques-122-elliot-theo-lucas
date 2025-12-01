@@ -16,8 +16,7 @@ class Polygon:
     def scale(self, factor : float) -> None:
         for i in range(len(self.points)):
             self.points[i] = self.points[i][0] * factor, self.points[i][1] * factor
-        self.recalc_bbox()
-
+        
     def translate(self, offset : Tuple[int, int]) -> None:
         for i in range(len(self.points)):
             self.points[i] = self.points[i][0] + offset[0], self.points[i][1] + offset[1]
@@ -45,6 +44,20 @@ class Drawer:
         self.polygons : List[Polygon] = []
 
     def update_polygon_points(self):
+
+        middle : Tuple[int, int] = 0, 0
+        halfwin : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
+
+        for polygon in self.polygons:
+            middle = 0, 0
+            for point in polygon.points: middle = middle[0] + point[0], middle[1] + point[1] # middle
+            middle = middle[0] // len(polygon.points), middle[1] // len(polygon.points)
+            for i in range(len(polygon.points)): 
+                polygon.points[i] = polygon.points[i][0] - middle[0] + halfwin[0], - polygon.points[i][1] + middle[1] + halfwin[1]
+                # symetry : newy = y - 2(y - midy) = y -2y + 2midy = -y + 2midy
+                # translation to window center: newx = x - midx + halfwinx, newy = y - midy + halfwiny
+                # together : newx = x - midx + halfwinx, newy = -y + 2midy - midy + halfwiny = -y + midy + halfwiny
+
         minw : float = self.polygons[0].bbox[0]
         maxw : float = self.polygons[0].bbox[1]
         minh : float = self.polygons[0].bbox[2]
@@ -56,21 +69,13 @@ class Drawer:
             if polygon.bbox[3] > maxh: maxh = polygon.bbox[3]
 
         factor : float = 0
-        average : Tuple[float, float] = 0, 0
-        windows_middle : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
 
         if (maxw - minw) * (maxh - minh) != 0: 
             factor = min(self.window[0] / (maxw - minw), self.window[1] / (maxh - minh))
 
         for polygon in self.polygons:
             polygon.scale(factor)
-
-            average = 0, 0
-            for i in range(len(polygon.points)):
-                average = average[0] + polygon.points[i][0], average[1] + polygon.points[i][1]
-            average = -average[0] / len(polygon.points) + windows_middle[0], -average[1] / len(polygon.points) + windows_middle[1]
-            polygon.translate(average)
-
+            polygon.recalc_bbox()
 
     def run(self) -> int:
 
