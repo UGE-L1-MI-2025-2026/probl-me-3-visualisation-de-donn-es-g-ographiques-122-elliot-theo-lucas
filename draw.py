@@ -49,9 +49,7 @@ class Drawer:
         halfwin : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
 
         for polygon in self.polygons:
-            middle = 0, 0
-            for point in polygon.points: middle = middle[0] + point[0], middle[1] + point[1] # middle
-            middle = middle[0] // len(polygon.points), middle[1] // len(polygon.points)
+            middle = (polygon.bbox[1] - polygon.bbox[0]) / 2, (polygon.bbox[3] - polygon.bbox[2]) / 2
             for i in range(len(polygon.points)): 
                 polygon.points[i] = polygon.points[i][0] - middle[0] + halfwin[0], - polygon.points[i][1] + middle[1] + halfwin[1]
                 # symetry : newy = y - 2(y - midy) = y -2y + 2midy = -y + 2midy
