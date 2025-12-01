@@ -12,6 +12,7 @@ class Extractor:
         info["bbox"] = shape.bbox
         info["points"] = shape.points
         info["parts"] = shape.parts
+        dir(shape)
         return info
 
 
