@@ -1,5 +1,8 @@
 import fltk
 from typing import List, Tuple, Dict
+from math import log, tan, pi, radians, degrees
+
+MERC = lambda x: degrees(log(tan(radians(x) / 2 + pi / 4)))
 
 class Polygon:
 
@@ -13,14 +16,10 @@ class Polygon:
     def draw(self) -> int:
         return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
 
-    def scale(self, factor : float) -> None:
+    def flatten_points(self) -> None:
         for i in range(len(self.points)):
-            self.points[i] = self.points[i][0] * factor, self.points[i][1] * factor
-        
-    def translate(self, offset : Tuple[int, int]) -> None:
-        for i in range(len(self.points)):
-            self.points[i] = self.points[i][0] + offset[0], self.points[i][1] + offset[1]
-        self.bbox = self.bbox[0] + offset[0], self.bbox[1] + offset[0], self.bbox[2] + offset[1], self.bbox[3] + offset[1]
+            self.points[i] = self.points[i][0], MERC(self.points[i][1])
+        self.bbox = self.bbox[0], MERC(self.bbox[1]), self.bbox[2], MERC(self.bbox[3])
 
     def recalc_bbox(self) -> None:
         minw : float = self.points[0][0]; maxw : float = self.points[0][1]; minh : float = self.points[0][0]; maxh : float = self.points[0][1]
@@ -43,43 +42,23 @@ class Drawer:
         self.functions : List[function] = []
         self.polygons : List[Polygon] = []
 
-    def update_polygon_points(self):
-
-        middle : Tuple[int, int] = 0, 0
-        halfwin : Tuple[int, int] = self.window[0] >> 1, self.window[1] >> 1
-
+    def initialize_polygon(self, polygon : Polygon, target_box : Tuple[int, int, int, int]) -> None:
+        polygon.flatten_points()
+        a = min(target_box[2] / (polygon.bbox[2] - polygon.bbox[0]), target_box[3] / (polygon.bbox[3] - polygon.bbox[1]))
+        B, C = target_box[0] - a * polygon.bbox[0], target_box[1] + a * polygon.bbox[3]
+        for i in range(len(polygon.points)):
+            polygon.points[i] = a * polygon.points[i][0] + B, - a * polygon.points[i][1] + C
+        
+    def update_polygons_boxes(self):
         for polygon in self.polygons:
-            middle = (polygon.bbox[1] - polygon.bbox[0]) / 2, (polygon.bbox[3] - polygon.bbox[2]) / 2
-            for i in range(len(polygon.points)): 
-                polygon.points[i] = polygon.points[i][0] - middle[0] + halfwin[0], - polygon.points[i][1] + middle[1] + halfwin[1]
-                # symetry : newy = y - 2(y - midy) = y -2y + 2midy = -y + 2midy
-                # translation to window center: newx = x - midx + halfwinx, newy = y - midy + halfwiny
-                # together : newx = x - midx + halfwinx, newy = -y + 2midy - midy + halfwiny = -y + midy + halfwiny
-
-        minw : float = self.polygons[0].bbox[0]
-        maxw : float = self.polygons[0].bbox[1]
-        minh : float = self.polygons[0].bbox[2]
-        maxh : float = self.polygons[0].bbox[3]
-        for polygon in self.polygons:
-            if polygon.bbox[0] < minw: minw = polygon.bbox[0]
-            if polygon.bbox[1] < minh: minh = polygon.bbox[1]
-            if polygon.bbox[2] > maxw: maxw = polygon.bbox[2]
-            if polygon.bbox[3] > maxh: maxh = polygon.bbox[3]
-
-        factor : float = 0
-
-        if (maxw - minw) * (maxh - minh) != 0: 
-            factor = min(self.window[0] / (maxw - minw), self.window[1] / (maxh - minh))
-
-        for polygon in self.polygons:
-            polygon.scale(factor)
-            polygon.recalc_bbox()
+            pass
 
     def run(self) -> int:
 
         return_code : int = 0
 
-        self.update_polygon_points()
+        for polygon in self.polygons: 
+            self.initialize_polygon(polygon, (100, 100, 500, 500))
 
         while True:
             event = fltk.donne_ev()
