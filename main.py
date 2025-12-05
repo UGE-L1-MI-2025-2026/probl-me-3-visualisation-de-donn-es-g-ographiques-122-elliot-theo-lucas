@@ -7,8 +7,9 @@ if __name__ == "__main__":
     drawer = Drawer()
     extractor = Extractor()
 
-    infos = extractor.get(77)
+    idf = [ extractor.get(i) for i in [ 75, 92, 93, 94, 77, 91, 78, 95 ] ]
 
-    drawer.polygons.append(Polygon(infos["points"], infos["bbox"]))
+    for dep in idf:
+        drawer.polygons.append(Polygon(dep["points"], dep["bbox"]))
 
     drawer.run()

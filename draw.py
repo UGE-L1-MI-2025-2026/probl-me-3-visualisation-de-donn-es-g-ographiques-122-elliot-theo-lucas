@@ -12,14 +12,17 @@ class Polygon:
         self.colour : str = colour
         self.fill : str = fill
         self.thickness : float = thickness
+        self.flattened : bool = False
     
     def draw(self) -> int:
         return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
 
     def flatten_points(self) -> None:
+        if self.flattened: print("! WARNING ! flattening a polygon two times")
         for i in range(len(self.points)):
             self.points[i] = self.points[i][0], MERC(self.points[i][1])
         self.bbox = self.bbox[0], MERC(self.bbox[1]), self.bbox[2], MERC(self.bbox[3])
+        self.flattened = True
 
     def recalc_bbox(self) -> None:
         minw : float = self.points[0][0]; maxw : float = self.points[0][1]; minh : float = self.points[0][0]; maxh : float = self.points[0][1]
@@ -42,23 +45,36 @@ class Drawer:
         self.functions : List[function] = []
         self.polygons : List[Polygon] = []
 
-    def initialize_polygon(self, polygon : Polygon, target_box : Tuple[int, int, int, int]) -> None:
-        polygon.flatten_points()
-        a = min(target_box[2] / (polygon.bbox[2] - polygon.bbox[0]), target_box[3] / (polygon.bbox[3] - polygon.bbox[1]))
-        B, C = target_box[0] - a * polygon.bbox[0], target_box[1] + a * polygon.bbox[3]
-        for i in range(len(polygon.points)):
-            polygon.points[i] = a * polygon.points[i][0] + B, - a * polygon.points[i][1] + C
-        
-    def update_polygons_boxes(self):
+        self.a, self.B, self.C = 0, 0, 0
+
+    def translate_polygons(self):
         for polygon in self.polygons:
-            pass
+            for i in range(len(polygon.points)):
+                polygon.points[i] = self.a * polygon.points[i][0] + self.B, - self.a * polygon.points[i][1] + self.C
+        
+    def define_parameters(self, target_box : Tuple[int, int, int, int]):
+        all_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
+        for polygon in self.polygons:
+            polygon.flatten_points()
+            
+            if polygon.bbox[0] < all_bbox[0]: all_bbox[0] = polygon.bbox[0]
+            if polygon.bbox[1] < all_bbox[1]: all_bbox[1] = polygon.bbox[1]
+            if polygon.bbox[2] > all_bbox[2]: all_bbox[2] = polygon.bbox[2]
+            if polygon.bbox[3] > all_bbox[3]: all_bbox[3] = polygon.bbox[3]
+        
+        self.a = min(
+            target_box[2] / (all_bbox[2] - all_bbox[0]), 
+            target_box[3] / (all_bbox[3] - all_bbox[1])
+        )
+        self.B, self.C = target_box[0] - self.a * all_bbox[0], target_box[1] + self.a * all_bbox[3]
+            
 
     def run(self) -> int:
 
         return_code : int = 0
 
-        for polygon in self.polygons: 
-            self.initialize_polygon(polygon, (100, 100, 500, 500))
+        self.define_parameters((0, 0, self.window[0], self.window[1]))
+        self.translate_polygons()
 
         while True:
             event = fltk.donne_ev()
