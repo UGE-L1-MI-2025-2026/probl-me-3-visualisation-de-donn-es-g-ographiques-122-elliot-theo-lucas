@@ -13,3 +13,4 @@ if __name__ == "__main__":
         drawer.polygons.append(Polygon(dep["points"], dep["bbox"]))
 
     drawer.run()
+    
