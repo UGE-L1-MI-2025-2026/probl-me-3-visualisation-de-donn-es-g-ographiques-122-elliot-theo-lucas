@@ -10,3 +10,6 @@ if __name__ == "__main__":
     infos = extractor.get(47)
 
     drawer.polygons.append(Polygon(infos["points"], infos["bbox"]))
+
+    drawer.run()
+    
