@@ -1,0 +1,5 @@
+# Fichiers ignorés par défaut
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
