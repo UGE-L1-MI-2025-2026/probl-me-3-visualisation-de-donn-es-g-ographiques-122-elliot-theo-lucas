@@ -1,4 +1,5 @@
 import fltk
+from load import loads
 from typing import List, Tuple, Dict
 from math import log, tan, pi, radians, degrees
 
@@ -33,6 +34,31 @@ class Polygon:
             if point[1] > maxh: maxh = point[1]
         self.bbox = minw, maxw, minh, maxh
 
+class Cercle:
+    def __init__(self,drawer):
+        self.drawer = drawer                # accès à a, B, C
+        self.liste_info=loads().info
+
+    def boucle(self):
+        self.position = []
+        for e in self.liste_info:
+            # appliquer projection + mise à l'échelle
+            x = self.drawer.a * e["lon"] + self.drawer.B
+            y = -self.drawer.a * MERC(e["lat"]) + self.drawer.C
+            fltk.cercle(x, y, 5, couleur="red", remplissage="red")
+            self.position.append((x, y, e))
+
+    def draw(self, longitude, latitude):
+        fltk.cercle(longitude, latitude, 5,couleur= "red",remplissage="red")
+
+    def detecter_clic(self, x_clic, y_clic):
+        rayon = 5
+        for x, y, restaurant in self.position:
+            if (x_clic - x) ** 2 + (y_clic - y) ** 2 <= rayon ** 2:
+                return restaurant
+        return None
+
+
 class Drawer:
 
     def __init__(self) -> None:
@@ -41,8 +67,8 @@ class Drawer:
         fltk.cree_fenetre(self.window[0], self.window[1])
 
         self.thickness : float = 2.0
-
-        self.functions : List[function] = []
+        self.cercles=[Cercle(self)]
+        self.functions  = []
         self.polygons : List[Polygon] = []
 
         self.a, self.B, self.C = 0, 0, 0
@@ -61,18 +87,25 @@ class Drawer:
             if polygon.bbox[1] < all_bbox[1]: all_bbox[1] = polygon.bbox[1]
             if polygon.bbox[2] > all_bbox[2]: all_bbox[2] = polygon.bbox[2]
             if polygon.bbox[3] > all_bbox[3]: all_bbox[3] = polygon.bbox[3]
-        
+
         self.a = min(
             target_box[2] / (all_bbox[2] - all_bbox[0]), 
             target_box[3] / (all_bbox[3] - all_bbox[1])
         )
         self.B, self.C = target_box[0] - self.a * all_bbox[0], target_box[1] + self.a * all_bbox[3]
-            
+
+    def affiche_infos(self, restaurant):
+        fltk.efface_tout()
+        fltk.texte(50, 50, f"Nom : {restaurant['title']}", "black")
+        fltk.texte(50, 80, f"Contact : {restaurant['contact']}", "black")
+        fltk.texte(50, 110, f"Infos : {restaurant['infos']}", "black")
+        fltk.mise_a_jour()
+        fltk.attente(5)  # affiche 3 secondes
+
 
     def run(self) -> int:
 
         return_code : int = 0
-
         self.define_parameters((0, 0, self.window[0], self.window[1]))
         self.translate_polygons()
 
@@ -81,9 +114,16 @@ class Drawer:
             event_type = fltk.type_ev(event)
 
             fltk.efface_tout()
-
             for p in self.polygons: p.draw()
+            for e in self.cercles: e.boucle()
             for f in self.functions: f()
+
+            if event_type == "ClicGauche":
+                x_clic, y_clic = fltk.abscisse(event), fltk.ordonnee(event)
+                for cercle in self.cercles:
+                    restaurant = cercle.detecter_clic(x_clic, y_clic)
+                    if restaurant:
+                        self.affiche_infos(restaurant)
 
             if event_type == "Quitte": break
 
@@ -92,3 +132,4 @@ class Drawer:
         fltk.ferme_fenetre()
 
         return return_code
+

@@ -1,21 +1,28 @@
 import json
 
-class load:
-    def __init__(self,fichiers):
+class loads:
+    def __init__(self,fichiers="ensemble-des-lieux-de-restauration-des-crous.json"):
         self.fichiers=fichiers
         with open(self.fichiers) as f:
             self.data=json.load(f)
-            self.geolocalisation=self.trouver_geolocalisation(self.data)
+            self.info=self.trouver_info()
 
-    def trouver_geolocalisation(self,data):
-        s=[]
-        for i in range(len(self.data)):
-            s.append((self.data[i]["geolocalisation"]['lon'],self.data[i]["geolocalisation"]['lat']))
+    def trouver_info(self):
+        s = []
+        for r in self.data:
+            # on garde toutes les infos utiles dans un dict
+            s.append({
+                "lon": r["geolocalisation"]["lon"],
+                "lat": r["geolocalisation"]["lat"],
+                "title": r.get("title", ""),
+                "contact": r.get("contact", ""),
+                "infos": r.get("infos", ""),
+                "photo": r.get("photo", "")
+            })
         return s
 
 
-s=load("ensemble-des-lieux-de-restauration-des-crous.json")
-print(s.data[1]["geolocalisation"])
-print(len(s.data))
-print(s.geolocalisation)
+
+
+
 

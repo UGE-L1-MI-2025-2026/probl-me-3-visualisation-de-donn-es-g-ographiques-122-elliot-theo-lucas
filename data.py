@@ -1,5 +1,4 @@
 import shapefile
-import random as rd
 class Extractor:
     def __init__(self):
         self.sf: shapefile.Reader = shapefile.Reader("src/departements-20140306-50m")
