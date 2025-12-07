@@ -1,7 +1,7 @@
 import fltk
 from load import loads
 from typing import List, Tuple, Dict
-from math import log, tan, pi, radians, degrees
+from math import log, tan, pi, radians, degrees, sqrt
 
 MERC = lambda x: degrees(log(tan(radians(x) / 2 + pi / 4)))
 
@@ -67,7 +67,7 @@ class Drawer:
         fltk.cree_fenetre(self.window[0], self.window[1])
 
         self.thickness : float = 2.0
-        self.cercles=[Cercle(self)]
+        self.cercles=Cercle(self)
         self.functions  = []
         self.polygons : List[Polygon] = []
 
@@ -115,15 +115,14 @@ class Drawer:
 
             fltk.efface_tout()
             for p in self.polygons: p.draw()
-            for e in self.cercles: e.boucle()
+            self.cercles.boucle()
             for f in self.functions: f()
 
             if event_type == "ClicGauche":
                 x_clic, y_clic = fltk.abscisse(event), fltk.ordonnee(event)
-                for cercle in self.cercles:
-                    restaurant = cercle.detecter_clic(x_clic, y_clic)
-                    if restaurant:
-                        self.affiche_infos(restaurant)
+                restaurant = self.cercles.detecter_clic(x_clic, y_clic)
+                if restaurant:
+                    self.affiche_infos(restaurant)
 
             if event_type == "Quitte": break
 
