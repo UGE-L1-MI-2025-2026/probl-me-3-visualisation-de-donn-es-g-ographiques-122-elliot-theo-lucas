@@ -71,7 +71,6 @@ class Drawer:
 
         self.thickness : float = 2.0
         self.circles = List[Cercle] = []
-        self.functions  = []
         self.polygons : List[Polygon] = []
 
         self.a, self.B, self.C = 0, 0, 0
@@ -116,7 +115,7 @@ class Drawer:
         self.define_parameters((0, 0, self.window[0], self.window[1]))
         self.translate_polygons()
 
-        for circle in self.circles: c.flatten()
+        for circle in self.circles: circle.flatten()
 
         while True:
             event = fltk.donne_ev()
@@ -124,7 +123,7 @@ class Drawer:
 
             fltk.efface_tout()
             for p in self.polygons: p.draw()
-            for f in self.functions: f()
+            for circle in self.circles: circle.draw()
 
             if event_type == "ClicGauche":
                 restaurant = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
