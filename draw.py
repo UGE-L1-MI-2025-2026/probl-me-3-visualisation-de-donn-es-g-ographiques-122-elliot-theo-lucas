@@ -46,16 +46,6 @@ class Cercle:
         self.position = self.position[0], MERC(self.position[1])
         self.flattened = True
 
-
-    def boucle(self):
-        self.position = []
-        for e in self.liste_info:
-            # appliquer projection + mise à l'échelle
-            x = self.drawer.a * e["lon"] + self.drawer.B
-            y = -self.drawer.a * MERC(e["lat"]) + self.drawer.C
-            fltk.cercle(x, y, 5, couleur="red", remplissage="red")
-            self.position.append((x, y, e))
-
     def draw(self):
         fltk.cercle(self.position[0], self.position[0], self.radius, couleur= "red", remplissage="red")
 
