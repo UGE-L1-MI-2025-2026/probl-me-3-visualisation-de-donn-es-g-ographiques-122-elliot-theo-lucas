@@ -108,8 +108,7 @@ class Drawer:
         fltk.texte(50, 50, f"Nom : {restaurant['title']}", "black")
         fltk.texte(50, 80, f"Contact : {restaurant['contact']}", "black")
         fltk.texte(50, 110, f"Infos : {restaurant['infos']}", "black")
-        fltk.mise_a_jour()
-        fltk.attente(5)  # affiche 3 secondes
+        
 
     def get_infos_from_click(self, client_x, client_y):
         for circle in self.circles:
