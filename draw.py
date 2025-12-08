@@ -35,9 +35,16 @@ class Polygon:
         self.bbox = minw, maxw, minh, maxh
 
 class Cercle:
-    def __init__(self,drawer):
-        self.drawer = drawer                # accès à a, B, C
-        self.liste_info=loads().info
+    def __init__(self, position : Tuple[int, int], radius : float, metadata : Dict):
+        self.position : Tuple[int, int] = position
+        self.radius : float = radius
+        self.metadata : Dict = metadata
+        self.flattened : bool = False
+
+    def flatten(self):
+        if self.flattened: print("! WARNING ! flattening a circle two times")
+        self.position = self.position[0], MERC(self.position[1])
+        self.flattened = True
 
     def boucle(self):
         self.position = []
@@ -48,15 +55,11 @@ class Cercle:
             fltk.cercle(x, y, 5, couleur="red", remplissage="red")
             self.position.append((x, y, e))
 
-    def draw(self, longitude, latitude):
-        fltk.cercle(longitude, latitude, 5,couleur= "red",remplissage="red")
+    def draw(self):
+        fltk.cercle(self.position[0], self.position[0], self.radius, couleur= "red", remplissage="red")
 
-    def detecter_clic(self, x_clic, y_clic):
-        rayon = 5
-        for x, y, restaurant in self.position:
-            if (x_clic - x) ** 2 + (y_clic - y) ** 2 <= rayon ** 2:
-                return restaurant
-        return None
+    def detect_click(self, client_x, client_y):
+        return (client_x - self.position[0]) ** 2 + (client_y - self.position[1]) ** 2 <= self.radius ** 2
 
 
 class Drawer:
@@ -67,7 +70,7 @@ class Drawer:
         fltk.cree_fenetre(self.window[0], self.window[1])
 
         self.thickness : float = 2.0
-        self.cercles=Cercle(self)
+        self.circles = List[Cercle] = []
         self.functions  = []
         self.polygons : List[Polygon] = []
 
@@ -102,6 +105,10 @@ class Drawer:
         fltk.mise_a_jour()
         fltk.attente(5)  # affiche 3 secondes
 
+    def get_infos_from_click(self, client_x, client_y):
+        for circle in self.circles:
+            if circle.detect_click(client_x, client_y): return circle.metadata
+
 
     def run(self) -> int:
 
@@ -109,20 +116,18 @@ class Drawer:
         self.define_parameters((0, 0, self.window[0], self.window[1]))
         self.translate_polygons()
 
+        for circle in self.circles: c.flatten()
+
         while True:
             event = fltk.donne_ev()
             event_type = fltk.type_ev(event)
 
             fltk.efface_tout()
             for p in self.polygons: p.draw()
-            self.cercles.boucle()
             for f in self.functions: f()
 
             if event_type == "ClicGauche":
-                x_clic, y_clic = fltk.abscisse(event), fltk.ordonnee(event)
-                restaurant = self.cercles.detecter_clic(x_clic, y_clic)
-                if restaurant:
-                    self.affiche_infos(restaurant)
+                restaurant = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
 
             if event_type == "Quitte": break
 
