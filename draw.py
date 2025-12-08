@@ -134,8 +134,15 @@ class Drawer:
 
             if event_type == "ClicGauche":
                 restaurant = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
-
-            if event_type == "Quitte": break
+                while True:
+                    ev = fltk.attend_ev()
+                    tev = fltk.type_ev(ev)
+                    if tev == "Touche":
+                        tch = fltk.touche(ev)
+                        if tch == "Escape": break
+                    if tev=="Quitte": break
+                fltk.mise_a_jour()
+                if event_type == "Quitte": break
 
             fltk.mise_a_jour()
 
