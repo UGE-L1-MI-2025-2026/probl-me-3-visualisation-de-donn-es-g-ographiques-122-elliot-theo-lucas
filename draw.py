@@ -1,5 +1,4 @@
 import fltk
-from load import loads
 from typing import List, Tuple, Dict
 from math import log, tan, pi, radians, degrees, sqrt
 
@@ -47,10 +46,16 @@ class Cercle:
         self.flattened = True
 
     def draw(self):
-        fltk.cercle(self.position[0], self.position[0], self.radius, couleur= "red", remplissage="red")
+        fltk.cercle(self.position[0], self.position[1], self.radius, couleur= "red", remplissage="red")
 
     def detect_click(self, client_x, client_y):
         return (client_x - self.position[0]) ** 2 + (client_y - self.position[1]) ** 2 <= self.radius ** 2
+
+
+class SubWindow:
+
+    def __init__(self):
+        pass
 
 
 class Drawer:
@@ -122,7 +127,7 @@ class Drawer:
             for circle in self.circles: circle.draw()
 
             if event_type == "ClicGauche":
-                restaurant = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
+                metadata = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
                 while True:
                     ev = fltk.attend_ev()
                     tev = fltk.type_ev(ev)
