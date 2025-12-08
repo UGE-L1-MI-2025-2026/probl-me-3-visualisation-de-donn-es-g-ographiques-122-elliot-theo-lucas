@@ -69,29 +69,29 @@ class Extractor:
         
         return data 
 
-def get_all(self):
+    def get_all(self):
 
-    data : Tuple[List[Dict], List[Dict]] = [], []
-
-    for shape_id in shape_ids: 
-        shape : shapefile.Polygon = self.sf.shape(shape_id)
-        data[0].append({
-            "bbox": shape.bbox,
-            "points": shape.points,
-            "parts": shape.parts
-        })
-
-    with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
-        all_metadata : Dict = json.load(f)
-
-        for metadata in all_metadata: # each metadata is a dict
-            data[1].append({
-                "longitude": metadata["geolocalisation"].get("lon", ""),
-                "latitude": metadata["geolocalisation"].get("lat", ""),
-                "title": metadata.get("title", ""),
-                "contact": metadata.get("contact", ""),
-                "infos": metadata.get("infos", ""),
-                "photo": metadata.get("photo", "")
+        data : Tuple[List[Dict], List[Dict]] = [], []
+    
+        for shape_id in shape_ids: 
+            shape : shapefile.Polygon = self.sf.shape(shape_id)
+            data[0].append({
+                "bbox": shape.bbox,
+                "points": shape.points,
+                "parts": shape.parts
             })
+    
+        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
+            all_metadata : Dict = json.load(f)
+    
+            for metadata in all_metadata: # each metadata is a dict
+                data[1].append({
+                    "longitude": metadata["geolocalisation"].get("lon", ""),
+                    "latitude": metadata["geolocalisation"].get("lat", ""),
+                    "title": metadata.get("title", ""),
+                    "contact": metadata.get("contact", ""),
+                    "infos": metadata.get("infos", ""),
+                    "photo": metadata.get("photo", "")
+                })
 
     return data
