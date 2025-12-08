@@ -1,10 +1,12 @@
 import shapefile
 import json
 from typing import List, Dict, Tuple
+from math import log, tan, pi, radians, degrees
 import re
 
+MERC = lambda x: degrees(log(tan(radians(x) / 2 + pi / 4)))
 
-class Extractor:
+class DataManager:
     def __init__(self):
         self.sf: shapefile.Reader = shapefile.Reader("src/departements-20140306-50m")
         self.data = {}
@@ -94,3 +96,12 @@ class Extractor:
                 })
 
         return data
+    
+    def mercarize_points(self, points : List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        return [ ( points[i][0], MERC(points[i][1]) ) for i in range(len(points)) ]
+    
+    def mercarize_bbox(self, bbox : Tuple[int, int, int, int]) -> Tuple[int, int, int, int]:
+        return bbox[0], MERC(bbox[1]), bbox[2], MERC(bbox[3])
+    
+    def mercarize_int(self, x : int):
+        return MERC(x)
