@@ -1,20 +1,19 @@
-from draw import Drawer, Polygon, Cercle
+from draw import Drawer, Region, Point
 from shapefile import Reader
-from data import Extractor
+from data import DataManager
 
 if __name__ == "__main__":
 
     drawer = Drawer()
-    extractor = Extractor()
+    data_manager = DataManager()
 
-    idf = extractor.get_multiple([ 75 ])
+    idf = data_manager.get_multiple([ 75 ])
 
     for dep in idf[0]:
-        drawer.polygons.append(Polygon(dep["points"], dep["bbox"]))
+        drawer.regions.append(Region(data_manager.mercarize_points(dep["points"]), data_manager.mercarize_bbox(dep["bbox"])))
 
     for crous in idf[1]:
-        print(crous)
-        drawer.circles.append(Cercle((crous["longitude"], crous["latitude"]), 5, crous))
+        drawer.points.append(Point((crous["longitude"], data_manager.mercarize_int(crous["latitude"])), 5, crous))
 
     drawer.run()
     
