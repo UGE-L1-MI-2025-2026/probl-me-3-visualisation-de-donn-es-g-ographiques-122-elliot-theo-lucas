@@ -35,12 +35,12 @@ class Extractor:
         return info
 
     def get_multiple(self, shape_ids : List[int]):
-        
+
         data : Tuple[List[Dict], List[Dict]] = [], []
         total_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
         pattern : str = r"(?:" + "|".join(map(str, shape_ids)) + r")\d{3}"
 
-        for shape_id in shape_ids: 
+        for shape_id in shape_ids:
             shape : shapefile.Polygon = self.sf.shape(shape_id)
             data[0].append({
                 "bbox": shape.bbox,
@@ -66,24 +66,23 @@ class Extractor:
                         "infos": metadata.get("infos", ""),
                         "photo": metadata.get("photo", "")
                     })
-        
-        return data 
+
+        return data
 
     def get_all(self):
 
         data : Tuple[List[Dict], List[Dict]] = [], []
-    
-        for shape_id in shape_ids: 
-            shape : shapefile.Polygon = self.sf.shape(shape_id)
+
+        for shape in self.sf.shapes():
             data[0].append({
                 "bbox": shape.bbox,
                 "points": shape.points,
                 "parts": shape.parts
             })
-    
+
         with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
             all_metadata : Dict = json.load(f)
-    
+
             for metadata in all_metadata: # each metadata is a dict
                 data[1].append({
                     "longitude": metadata["geolocalisation"].get("lon", ""),
