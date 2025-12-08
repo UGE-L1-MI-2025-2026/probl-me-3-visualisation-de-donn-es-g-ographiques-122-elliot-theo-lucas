@@ -13,7 +13,7 @@ if __name__ == "__main__":
         drawer.polygons.append(Polygon(dep["points"], dep["bbox"]))
 
     for crous in idf[1]:
-        drawer.circles.append(Cercle())
+        drawer.circles.append(Cercle((crous["longitude"], crous["latitude"]), 5, crous))
 
     drawer.run()
     

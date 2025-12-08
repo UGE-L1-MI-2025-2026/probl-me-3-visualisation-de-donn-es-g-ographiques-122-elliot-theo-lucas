@@ -46,6 +46,7 @@ class Cercle:
         self.position = self.position[0], MERC(self.position[1])
         self.flattened = True
 
+
     def boucle(self):
         self.position = []
         for e in self.liste_info:
@@ -70,7 +71,7 @@ class Drawer:
         fltk.cree_fenetre(self.window[0], self.window[1])
 
         self.thickness : float = 2.0
-        self.circles = List[Cercle] = []
+        self.circles : List[Cercle] = []
         self.polygons : List[Polygon] = []
 
         self.a, self.B, self.C = 0, 0, 0
@@ -79,6 +80,10 @@ class Drawer:
         for polygon in self.polygons:
             for i in range(len(polygon.points)):
                 polygon.points[i] = self.a * polygon.points[i][0] + self.B, - self.a * polygon.points[i][1] + self.C
+
+    def translate_circles(self):
+        for circle in self.circles:
+            circle.position = self.a * circle.position[0] + self.B, - self.a * circle.position[1] + self.C
         
     def define_parameters(self, target_box : Tuple[int, int, int, int]):
         all_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
@@ -89,6 +94,8 @@ class Drawer:
             if polygon.bbox[1] < all_bbox[1]: all_bbox[1] = polygon.bbox[1]
             if polygon.bbox[2] > all_bbox[2]: all_bbox[2] = polygon.bbox[2]
             if polygon.bbox[3] > all_bbox[3]: all_bbox[3] = polygon.bbox[3]
+
+        for circle in self.circles: circle.flatten()
 
         self.a = min(
             target_box[2] / (all_bbox[2] - all_bbox[0]), 
@@ -112,10 +119,10 @@ class Drawer:
     def run(self) -> int:
 
         return_code : int = 0
+
         self.define_parameters((0, 0, self.window[0], self.window[1]))
         self.translate_polygons()
-
-        for circle in self.circles: circle.flatten()
+        self.translate_circles()
 
         while True:
             event = fltk.donne_ev()
