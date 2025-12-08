@@ -12,7 +12,10 @@ class PolygonPrimitive:
         self.thickness : float = thickness
 
     def render(self) -> int:
-        return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
+        # if self.bbox[0] < Drawer.WINDOW_SIZE[0] and self.bbox[1] < Drawer.WINDOW_SIZE[1] and self.bbox[2] > 0 and self.bbox[3] > 0:
+        if True: # change condition
+            return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
+        return -1
 
 
 class CirclePrimitive:
@@ -40,8 +43,14 @@ class Region:
     def translate(self, a : float, B : float, C : float):
         for i in range(len(self.polygon.points)):
             self.polygon.points[i] = a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C
+        self.polygon.bbox = (
+            a * self.base_polygon.bbox[0] + B,
+            - a * self.base_polygon.bbox[1] + C,
+            a * self.base_polygon.bbox[2] + B,
+            - a * self.base_polygon.bbox[3] + C
+        )
 
-class Point:
+class Place:
     def __init__(self, position : Tuple[int, int], radius : float, metadata : Dict):
         
         self.base_circle : CirclePrimitive = CirclePrimitive(position, radius)
@@ -66,13 +75,18 @@ class SubWindow:
 
 class Drawer:
 
+    WINDOW_SIZE : Tuple[int, int] = 1000, 500
+
     def __init__(self) -> None:
 
-        self.window : Tuple[int, int] = 1000, 500
-        fltk.cree_fenetre(self.window[0], self.window[1])
+        fltk.cree_fenetre(Drawer.WINDOW_SIZE[0], Drawer.WINDOW_SIZE[1], redimension = True)
 
-        self.points : List[Point] = []
+        self.places : List[Place] = []
         self.regions : List[Region] = []
+
+        self.old_mouse_pos : Tuple[float, float] = 0, 0
+        self.mouse_pos : Tuple[float, float] = 0, 0
+        self.map_velocity : Tuple[float, float] = 0, 0
 
         self.a, self.B, self.C = 0, 0, 0
         
@@ -98,27 +112,57 @@ class Drawer:
         
 
     def get_infos_from_click(self, client_x, client_y):
-        for point in self.points:
-            if point.detect_click(client_x, client_y): return point.metadata
+        for place in self.places:
+            if place.detect_click(client_x, client_y): return place.metadata
 
 
-    def run(self) -> int:
+    def update_and_render(self):
+        fltk.efface_tout()
 
-        return_code : int = 0
+        i = 0
+        for region in self.regions: i += 1 if region.render() >= 0 else 0
+        # print(i)
+
+        for place in self.places: place.render()
+
+        for region in self.regions: region.translate(self.a, self.B, self.C)
+        for place in self.places: place.translate(self.a, self.B, self.C)
+
+
+    def update_map_movements(self):
         
+        growth : float = self.a / 100
 
-        self.define_parameters((0, 0, self.window[0], self.window[1]))
+        if fltk.touche_pressee("space"):
+            self.map_velocity = self.old_mouse_pos[0] - self.mouse_pos[0], self.old_mouse_pos[1] - self.mouse_pos[1]
+
+        elif fltk.touche_pressee("Up"):
+            self.B += growth * (self.B - (Drawer.WINDOW_SIZE[0] >> 1)) / self.a
+            self.C += growth * (self.C - (Drawer.WINDOW_SIZE[1] >> 1)) / self.a
+            self.a += growth
+
+        elif fltk.touche_pressee("Down"):
+            self.B -= growth * (self.B - (Drawer.WINDOW_SIZE[0] >> 1)) / self.a
+            self.C -= growth * (self.C - (Drawer.WINDOW_SIZE[1] >> 1)) / self.a
+            self.a -= growth
+
+        self.B -= self.map_velocity[0]
+        self.C -= self.map_velocity[1]
+        self.map_velocity = self.map_velocity[0] * 0.93, self.map_velocity[1] * 0.93
+
+
+    def run(self):
+
+        self.define_parameters((0, 0, Drawer.WINDOW_SIZE[0], Drawer.WINDOW_SIZE[1]))
 
         while True:
             event = fltk.donne_ev()
             event_type = fltk.type_ev(event)
 
-            fltk.efface_tout()
-            for region in self.regions: region.render()
-            for circle in self.points: circle.render()
+            self.mouse_pos = fltk.abscisse_souris(), fltk.ordonnee_souris()
 
-            for region in self.regions: region.translate(self.a, self.B, self.C)
-            for point in self.points: point.translate(self.a, self.B, self.C)
+            self.update_and_render()
+            self.update_map_movements()
 
             if event_type == "ClicGauche":
                 metadata = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
@@ -130,11 +174,15 @@ class Drawer:
                         if tch == "Escape": break
                     if tev=="Quitte": break
                 fltk.mise_a_jour()
-                if event_type == "Quitte": break
+
+            elif event_type == "Redimension":
+                Drawer.WINDOW_SIZE = fltk.largeur_fenetre(), fltk.hauteur_fenetre()
+
+            elif event_type == "Quitte": break
+
+            self.old_mouse_pos = self.mouse_pos
 
             fltk.mise_a_jour()
 
         fltk.ferme_fenetre()
 
-        return return_code
-        
