@@ -4,11 +4,37 @@ from math import log, tan, pi, radians, degrees, sqrt
 
 MERC = lambda x: degrees(log(tan(radians(x) / 2 + pi / 4)))
 
+class PolygonPrimitive:
+
+    def __init__(self, points : List[Tuple[int, int]], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
+        self.bbox : Tuple[int, int, int, int] = bbox
+        self.points : List[Tuple[int, int]] = points
+        self.colour : str = colour
+        self.fill : str = fill
+        self.thickness : float = thickness
+
+    def render(self) -> int:
+        return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
+
+
+class CirclePrimitive:
+
+    def __init__(self, position : Tuple[int, int], radius : float, colour : str = black, fill : str = ""):
+        self.position : Tuple[int, int] = position
+        self.radius : float = radius
+        self.colour : str = colour
+        self.fill : str = fill
+
+    def render(self) -> int:
+        return fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
+
+
 class Polygon:
 
     def __init__(self, points : List[Tuple[int, int]], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
         self.bbox : Tuple[int, int, int, int] = bbox
         self.points : List[Tuple[int, int]] = points
+        self.base_poly : PolygonPrimitive = PolygonPrimitive(self.points, self.bbox)
         self.colour : str = colour
         self.fill : str = fill
         self.thickness : float = thickness
@@ -23,15 +49,6 @@ class Polygon:
             self.points[i] = self.points[i][0], MERC(self.points[i][1])
         self.bbox = self.bbox[0], MERC(self.bbox[1]), self.bbox[2], MERC(self.bbox[3])
         self.flattened = True
-
-    def recalc_bbox(self) -> None:
-        minw : float = self.points[0][0]; maxw : float = self.points[0][1]; minh : float = self.points[0][0]; maxh : float = self.points[0][1]
-        for point in self.points:
-            if point[0] < minw: minw = point[0]
-            if point[0] > maxw: maxw = point[0]
-            if point[1] < minh: minh = point[1]
-            if point[1] > maxh: maxh = point[1]
-        self.bbox = minw, maxw, minh, maxh
 
 class Cercle:
     def __init__(self, position : Tuple[int, int], radius : float, metadata : Dict):
