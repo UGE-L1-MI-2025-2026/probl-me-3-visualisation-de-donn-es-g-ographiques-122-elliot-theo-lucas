@@ -94,4 +94,4 @@ class Extractor:
                     "photo": metadata.get("photo", "")
                 })
 
-    return data
+        return data
