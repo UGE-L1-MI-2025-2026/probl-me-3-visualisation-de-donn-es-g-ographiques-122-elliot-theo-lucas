@@ -1,8 +1,6 @@
 import fltk
 from typing import List, Tuple, Dict
-from math import log, tan, pi, radians, degrees, sqrt
 
-MERC = lambda x: degrees(log(tan(radians(x) / 2 + pi / 4)))
 
 class PolygonPrimitive:
 
@@ -19,7 +17,7 @@ class PolygonPrimitive:
 
 class CirclePrimitive:
 
-    def __init__(self, position : Tuple[int, int], radius : float, colour : str = black, fill : str = ""):
+    def __init__(self, position : Tuple[int, int], radius : float, colour : str = "black", fill : str = ""):
         self.position : Tuple[int, int] = position
         self.radius : float = radius
         self.colour : str = colour
@@ -29,44 +27,35 @@ class CirclePrimitive:
         return fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
 
 
-class Polygon:
+class Region:
 
     def __init__(self, points : List[Tuple[int, int]], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
-        self.bbox : Tuple[int, int, int, int] = bbox
-        self.points : List[Tuple[int, int]] = points
-        self.base_poly : PolygonPrimitive = PolygonPrimitive(self.points, self.bbox)
-        self.colour : str = colour
-        self.fill : str = fill
-        self.thickness : float = thickness
-        self.flattened : bool = False
+
+        self.base_polygon : PolygonPrimitive = PolygonPrimitive(points, bbox)
+        self.polygon : PolygonPrimitive = PolygonPrimitive(points.copy(), bbox, colour, fill, thickness)
     
-    def draw(self) -> int:
-        return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
+    def render(self) -> int:
+        return self.polygon.render()
+    
+    def translate(self, a : float, B : float, C : float):
+        for i in range(len(self.polygon.points)):
+            self.polygon.points[i] = a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C
 
-    def flatten_points(self) -> None:
-        if self.flattened: print("! WARNING ! flattening a polygon two times")
-        for i in range(len(self.points)):
-            self.points[i] = self.points[i][0], MERC(self.points[i][1])
-        self.bbox = self.bbox[0], MERC(self.bbox[1]), self.bbox[2], MERC(self.bbox[3])
-        self.flattened = True
-
-class Cercle:
+class Point:
     def __init__(self, position : Tuple[int, int], radius : float, metadata : Dict):
-        self.position : Tuple[int, int] = position
-        self.radius : float = radius
+        
+        self.base_circle : CirclePrimitive = CirclePrimitive(position, radius)
+        self.circle : CirclePrimitive = CirclePrimitive(position, radius, colour = "red", fill = "red")
         self.metadata : Dict = metadata
-        self.flattened : bool = False
 
-    def flatten(self):
-        if self.flattened: print("! WARNING ! flattening a circle two times")
-        self.position = self.position[0], MERC(self.position[1])
-        self.flattened = True
+    def translate(self, a : float, B : float, C : float):
+        self.circle.position = a * self.base_circle.position[0] + B, - a * self.base_circle.position[1] + C
 
-    def draw(self):
-        fltk.cercle(self.position[0], self.position[1], self.radius, couleur= "red", remplissage="red")
+    def render(self):
+        return self.circle.render()
 
     def detect_click(self, client_x, client_y):
-        return (client_x - self.position[0]) ** 2 + (client_y - self.position[1]) ** 2 <= self.radius ** 2
+        return (client_x - self.circle.position[0]) ** 2 + (client_y - self.circle.position[1]) ** 2 <= self.circle.radius ** 2
 
 
 class SubWindow:
@@ -82,32 +71,18 @@ class Drawer:
         self.window : Tuple[int, int] = 1000, 500
         fltk.cree_fenetre(self.window[0], self.window[1])
 
-        self.thickness : float = 2.0
-        self.circles : List[Cercle] = []
-        self.polygons : List[Polygon] = []
+        self.points : List[Point] = []
+        self.regions : List[Region] = []
 
         self.a, self.B, self.C = 0, 0, 0
-
-    def translate_polygons(self):
-        for polygon in self.polygons:
-            for i in range(len(polygon.points)):
-                polygon.points[i] = self.a * polygon.points[i][0] + self.B, - self.a * polygon.points[i][1] + self.C
-
-    def translate_circles(self):
-        for circle in self.circles:
-            circle.position = self.a * circle.position[0] + self.B, - self.a * circle.position[1] + self.C
         
     def define_parameters(self, target_box : Tuple[int, int, int, int]):
         all_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
-        for polygon in self.polygons:
-            polygon.flatten_points()
-            
-            if polygon.bbox[0] < all_bbox[0]: all_bbox[0] = polygon.bbox[0]
-            if polygon.bbox[1] < all_bbox[1]: all_bbox[1] = polygon.bbox[1]
-            if polygon.bbox[2] > all_bbox[2]: all_bbox[2] = polygon.bbox[2]
-            if polygon.bbox[3] > all_bbox[3]: all_bbox[3] = polygon.bbox[3]
-
-        for circle in self.circles: circle.flatten()
+        for region in self.regions:
+            if region.base_polygon.bbox[0] < all_bbox[0]: all_bbox[0] = region.base_polygon.bbox[0]
+            if region.base_polygon.bbox[1] < all_bbox[1]: all_bbox[1] = region.base_polygon.bbox[1]
+            if region.base_polygon.bbox[2] > all_bbox[2]: all_bbox[2] = region.base_polygon.bbox[2]
+            if region.base_polygon.bbox[3] > all_bbox[3]: all_bbox[3] = region.base_polygon.bbox[3]
 
         self.a = min(
             target_box[2] / (all_bbox[2] - all_bbox[0]), 
@@ -123,25 +98,27 @@ class Drawer:
         
 
     def get_infos_from_click(self, client_x, client_y):
-        for circle in self.circles:
-            if circle.detect_click(client_x, client_y): return circle.metadata
+        for point in self.points:
+            if point.detect_click(client_x, client_y): return point.metadata
 
 
     def run(self) -> int:
 
         return_code : int = 0
+        
 
         self.define_parameters((0, 0, self.window[0], self.window[1]))
-        self.translate_polygons()
-        self.translate_circles()
 
         while True:
             event = fltk.donne_ev()
             event_type = fltk.type_ev(event)
 
             fltk.efface_tout()
-            for p in self.polygons: p.draw()
-            for circle in self.circles: circle.draw()
+            for region in self.regions: region.render()
+            for circle in self.points: circle.render()
+
+            for region in self.regions: region.translate(self.a, self.B, self.C)
+            for point in self.points: point.translate(self.a, self.B, self.C)
 
             if event_type == "ClicGauche":
                 metadata = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
@@ -160,4 +137,4 @@ class Drawer:
         fltk.ferme_fenetre()
 
         return return_code
-
+        
