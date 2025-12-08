@@ -1,4 +1,4 @@
-from draw import Drawer, Region, Point
+from draw import Drawer, Region, Place
 from shapefile import Reader
 from data import DataManager
 
@@ -13,7 +13,7 @@ if __name__ == "__main__":
         drawer.regions.append(Region(data_manager.mercarize_points(dep["points"]), data_manager.mercarize_bbox(dep["bbox"])))
 
     for crous in idf[1]:
-        drawer.points.append(Point((crous["longitude"], data_manager.mercarize_int(crous["latitude"])), 5, crous))
+        drawer.places.append(Place((crous["longitude"], data_manager.mercarize_int(crous["latitude"])), 5, crous))
 
     drawer.run()
     
