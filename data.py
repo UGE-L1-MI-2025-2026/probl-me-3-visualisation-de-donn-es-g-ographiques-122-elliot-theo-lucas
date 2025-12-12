@@ -59,17 +59,6 @@ class DataManager:
         with open("theatres-et-salles-de-spectacles.json") as f:
             all_metadata : Dict =json.load(f)
             for metadata in all_metadata:
-                data[1].append({
-                    "longitude" : metadata.get("x",""),
-                    "latitude"  : metadata.get("y",""),
-                    "title" : metadata.get("eq_nom_equipement",""),
-                    "contact": metadata.get("eq_nom_equipement"),
-                })
-
-        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
-            all_metadata : Dict = json.load(f)
-
-            for metadata in all_metadata: # each metadata is a dict
                 if int(metadata.get("id_secteur_postal", 0) / 1000) in shape_ids:
                     data[1].append({
                         "longitude": metadata["geolocaisation"].get("lon", ""),
@@ -79,7 +68,7 @@ class DataManager:
                         "infos": metadata.get("infos", ""),
                         "photo": metadata.get("photo", "")
                     })
-
+                
         return data
 
     def get_all(self):
