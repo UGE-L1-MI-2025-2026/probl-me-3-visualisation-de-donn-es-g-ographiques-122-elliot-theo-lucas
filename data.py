@@ -24,8 +24,6 @@ class DataManager:
 
         info["theatre"] = []
 
-        pattern : str = str(shape_id) + r"\d{3}"
-
         for metadata in self.data:
             if int(metadata.get("id_secteur_postal", 0) / 1000) == shape_id:
                 info["theatre"].append({
@@ -41,7 +39,6 @@ class DataManager:
 
         data : Tuple[List[Dict], List[Dict]] = [], []
         total_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
-        pattern : str = r"(?:" + "|".join(map(str, shape_ids)) + r")\d{3}"
 
         for shape_id in shape_ids:
             shape : shapefile.Polygon = self.sf.shape(shape_id)
@@ -63,10 +60,8 @@ class DataManager:
                     data[1].append({
                         "longitude": metadata["geolocaisation"].get("lon", ""),
                         "latitude": metadata["geolocalisation"].get("lat", ""),
-                        "title": metadata.get("title", ""),
-                        "contact": metadata.get("contact", ""),
-                        "infos": metadata.get("infos", ""),
-                        "photo": metadata.get("photo", "")
+                        "title" : metadata.get("eq_nom_equipement",""),
+                        "contact": metadata.get("eq_nom_equipement"),
                     })
                 
         return data
@@ -82,17 +77,15 @@ class DataManager:
                 "parts": shape.parts
             })
 
-        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
-            all_metadata : Dict = json.load(f)
+        with open("theatres-et-salles-de-spectacles.json") as f:
+            all_metadata : Dict =json.load(f)
 
             for metadata in all_metadata: # each metadata is a dict
                 data[1].append({
-                    "longitude": metadata["geolocalisation"].get("lon", ""),
+                    "longitude": metadata["geolocaisation"].get("lon", ""),
                     "latitude": metadata["geolocalisation"].get("lat", ""),
-                    "title": metadata.get("title", ""),
-                    "contact": metadata.get("contact", ""),
-                    "infos": metadata.get("infos", ""),
-                    "photo": metadata.get("photo", "")
+                    "title" : metadata.get("eq_nom_equipement",""),
+                    "contact": metadata.get("eq_nom_equipement"),
                 })
 
         return data
