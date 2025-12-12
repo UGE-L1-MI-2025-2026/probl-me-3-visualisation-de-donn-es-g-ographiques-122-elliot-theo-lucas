@@ -960,6 +960,11 @@ def couleur(objet: int) -> Optional[str]:
 
 
 @_fenetre_creee
+def get_pos(objet : int) -> Tuple[int, int]:
+    return __canevas.canvas.itemconfigure(objet)
+
+
+@_fenetre_creee
 def remplissage(objet: int) -> Optional[str]:
     assert __canevas is not None
     return __canevas.canvas.itemcget(objet, option="fill")  # type: ignore

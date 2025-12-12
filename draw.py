@@ -4,18 +4,47 @@ from typing import List, Tuple, Dict
 
 class PolygonPrimitive:
 
-    def __init__(self, points : List[Tuple[int, int]], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
+    def __init__(self, points : List[Tuple[int, int]], parts : List[int], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
         self.bbox : Tuple[int, int, int, int] = bbox
         self.points : List[Tuple[int, int]] = points
+        self.parts : List[int] = parts
         self.colour : str = colour
         self.fill : str = fill
         self.thickness : float = thickness
 
+        self.current_polygons : List[int] = []
+
+        print(fltk.get_pos(fltk.polygone([ (2, 3), (5, 9), (6, 4) ])))
+
     def render(self) -> int:
-        # if self.bbox[0] < Drawer.WINDOW_SIZE[0] and self.bbox[1] < Drawer.WINDOW_SIZE[1] and self.bbox[2] > 0 and self.bbox[3] > 0:
-        if True: # change condition
-            return fltk.polygone(self.points, couleur = self.colour, remplissage = self.fill, epaisseur = self.thickness)
-        return -1
+        if self.__is_outside:
+            return -1
+        elif len(self.current_polygons) > 0:
+            pass
+        else:
+            self.__rerender()
+
+    def __is_outside(self):
+        return self.bbox[0] > Drawer.WINDOW_SIZE[0] or self.bbox[1] < 0 or self.bbox[2] < 0 or self.bbox[3] > Drawer.WINDOW_SIZE[1]
+
+
+    def move(self, offsetX : float, offsetY : float):
+        for polygon in self.current_polygons:
+            fltk.deplace(polygon, offsetX, offsetY)
+        return 0
+
+    def __rerender(self):
+        self.current_polygons : List[int] = []
+        self.parts.append(len(self.points) - 1)
+        for i in range(len(self.parts) - 1):
+            self.current_polygons.append(
+                fltk.polygone(
+                    self.points[self.parts[i]:self.parts[i + 1]], 
+                    couleur = self.colour, 
+                    remplissage = self.fill, 
+                    epaisseur = self.thickness
+                )
+            )
 
 
 class CirclePrimitive:
@@ -32,9 +61,9 @@ class CirclePrimitive:
 
 class Region:
 
-    def __init__(self, points : List[Tuple[int, int]], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
+    def __init__(self, points : List[Tuple[int, int]], parts : List[int], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
 
-        self.base_polygon : PolygonPrimitive = PolygonPrimitive(points, bbox)
+        self.base_polygon : PolygonPrimitive = PolygonPrimitive(points, parts, bbox)
         self.polygon : PolygonPrimitive = PolygonPrimitive(points.copy(), bbox, colour, fill, thickness)
     
     def render(self) -> int:
@@ -119,10 +148,7 @@ class Drawer:
     def update_and_render(self):
         fltk.efface_tout()
 
-        i = 0
-        for region in self.regions: i += 1 if region.render() >= 0 else 0
-        # print(i)
-
+        for region in self.regions: region.render()
         for place in self.places: place.render()
 
         for region in self.regions: region.translate(self.a, self.B, self.C)
