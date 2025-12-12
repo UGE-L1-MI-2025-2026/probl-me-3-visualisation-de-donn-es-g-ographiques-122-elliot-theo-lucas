@@ -7,7 +7,7 @@ if __name__ == "__main__":
     drawer = Drawer()
     data_manager = DataManager()
 
-    idf = data_manager.get_all()
+    idf = data_manager.get_multiple([ 75 ])
 
     for dep in idf[0]:
         drawer.regions.append(Region(data_manager.mercarize_points(dep["points"]), dep["parts"], data_manager.mercarize_bbox(dep["bbox"])))

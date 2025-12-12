@@ -6,6 +6,7 @@ class PolygonPrimitive:
 
     def __init__(self, points : List[Tuple[int, int]], parts : List[int], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
         self.bbox : Tuple[int, int, int, int] = bbox
+        self.oldbbox : Tuple[int, int, int, int] = bbox
         self.points : List[Tuple[int, int]] = points
         self.parts : List[int] = parts
         self.colour : str = colour
@@ -14,10 +15,9 @@ class PolygonPrimitive:
 
         self.current_polygons : List[int] = []
 
-        print(fltk.get_pos(fltk.polygone([ (2, 3), (5, 9), (6, 4) ])))
-
     def render(self) -> int:
-        if self.__is_outside:
+
+        if self.__is_outside():
             return -1
         elif len(self.current_polygons) > 0:
             pass
@@ -28,18 +28,28 @@ class PolygonPrimitive:
         return self.bbox[0] > Drawer.WINDOW_SIZE[0] or self.bbox[1] < 0 or self.bbox[2] < 0 or self.bbox[3] > Drawer.WINDOW_SIZE[1]
 
 
-    def move(self, offsetX : float, offsetY : float):
+    def moveTo(self, target : Tuple[int, int]):
+        differential : Tuple[int, int] = target[0] - self.bbox[0], target[1] - self.bbox[1]
         for polygon in self.current_polygons:
-            fltk.deplace(polygon, offsetX, offsetY)
+            fltk.deplace(polygon, differential[0], differential[1])
+            for i in range(len(self.points)): self.points[i] = self.points[i][0] + differential[0], self.points[i][1] + differential[0]
+            self.bbox = (
+                self.bbox[0] + differential[0], 
+                self.bbox[1] + differential[1], 
+                self.bbox[2] + differential[0], 
+                self.bbox[3] + differential[1]
+            )
+
         return 0
 
     def __rerender(self):
         self.current_polygons : List[int] = []
-        self.parts.append(len(self.points) - 1)
-        for i in range(len(self.parts) - 1):
+        parts : List[int] = list(self.parts)
+        parts.append(len(self.points) - 1)
+        for i in range(len(parts) - 1):
             self.current_polygons.append(
                 fltk.polygone(
-                    self.points[self.parts[i]:self.parts[i + 1]], 
+                    self.points[parts[i]:parts[i + 1]], 
                     couleur = self.colour, 
                     remplissage = self.fill, 
                     epaisseur = self.thickness
@@ -64,20 +74,15 @@ class Region:
     def __init__(self, points : List[Tuple[int, int]], parts : List[int], bbox : Tuple[int, int, int, int], colour : str = "black", fill : str = "", thickness : float = 2.0) -> None:
 
         self.base_polygon : PolygonPrimitive = PolygonPrimitive(points, parts, bbox)
-        self.polygon : PolygonPrimitive = PolygonPrimitive(points.copy(), bbox, colour, fill, thickness)
+        self.polygon : PolygonPrimitive = PolygonPrimitive(points.copy(), parts, bbox, colour, fill, thickness)
     
     def render(self) -> int:
         return self.polygon.render()
     
     def translate(self, a : float, B : float, C : float):
         for i in range(len(self.polygon.points)):
-            self.polygon.points[i] = a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C
-        self.polygon.bbox = (
-            a * self.base_polygon.bbox[0] + B,
-            - a * self.base_polygon.bbox[1] + C,
-            a * self.base_polygon.bbox[2] + B,
-            - a * self.base_polygon.bbox[3] + C
-        )
+            self.polygon.moveTo((a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C))
+
 
 class Place:
     def __init__(self, position : Tuple[int, int], radius : float, metadata : Dict):
@@ -146,7 +151,6 @@ class Drawer:
 
 
     def update_and_render(self):
-        fltk.efface_tout()
 
         for region in self.regions: region.render()
         for place in self.places: place.render()
