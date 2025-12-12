@@ -16,45 +16,22 @@ class PolygonPrimitive:
         self.current_polygons : List[int] = []
 
     def render(self) -> int:
+        if self.__is_outside(): return 0
 
-        if self.__is_outside():
-            return -1
-        elif len(self.current_polygons) > 0:
-            pass
-        else:
-            self.__rerender()
-
-    def __is_outside(self):
-        return self.bbox[0] > Drawer.WINDOW_SIZE[0] or self.bbox[1] < 0 or self.bbox[2] < 0 or self.bbox[3] > Drawer.WINDOW_SIZE[1]
-
-
-    def moveTo(self, target : Tuple[int, int]):
-        differential : Tuple[int, int] = target[0] - self.bbox[0], target[1] - self.bbox[1]
-        for polygon in self.current_polygons:
-            fltk.deplace(polygon, differential[0], differential[1])
-            for i in range(len(self.points)): self.points[i] = self.points[i][0] + differential[0], self.points[i][1] + differential[0]
-            self.bbox = (
-                self.bbox[0] + differential[0], 
-                self.bbox[1] + differential[1], 
-                self.bbox[2] + differential[0], 
-                self.bbox[3] + differential[1]
-            )
-
-        return 0
-
-    def __rerender(self):
-        self.current_polygons : List[int] = []
         parts : List[int] = list(self.parts)
         parts.append(len(self.points) - 1)
+
         for i in range(len(parts) - 1):
-            self.current_polygons.append(
-                fltk.polygone(
+            fltk.polygone(
                     self.points[parts[i]:parts[i + 1]], 
                     couleur = self.colour, 
                     remplissage = self.fill, 
                     epaisseur = self.thickness
                 )
-            )
+        return len(parts)
+
+    def __is_outside(self) -> bool:
+        return self.bbox[0] > Drawer.WINDOW_SIZE[0] or self.bbox[1] < 0 or self.bbox[2] < 0 or self.bbox[3] > Drawer.WINDOW_SIZE[1]
 
 
 class CirclePrimitive:
@@ -65,25 +42,12 @@ class CirclePrimitive:
         self.colour : str = colour
         self.fill : str = fill
 
-        self.circle : int = -1
-
     def render(self) -> int:
-        if self.circle > -1:
-            self.moveTo(self.position)
-        else:
-            self.__rerender()
-        return 0
+        if self.__is_outside(): return 0
+        return fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
 
-    def moveTo(self, target : Tuple[int, int]):
-        differential : Tuple[int, int] = target[0] - self.bbox[0], target[1] - self.bbox[1]
-        fltk.deplace(self.circle, differential[0], differential[1])
-        self.position = target
-        print(self.position)
-        return 0
-
-    def __rerender(self) -> int: 
-        self.circle = fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
-        return 0
+    def __is_outside(self) -> bool:
+        return self.position[0] > Drawer.WINDOW_SIZE[0] + 10 or self.position[1] + 10 < 0 or self.position[0] + 10 < 0 or self.position[1] > Drawer.WINDOW_SIZE[1] + 10
 
 
 class Region:
@@ -98,7 +62,13 @@ class Region:
     
     def translate(self, a : float, B : float, C : float):
         for i in range(len(self.polygon.points)):
-            self.polygon.moveTo((a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C))
+            self.polygon.points[i] = a * self.base_polygon.points[i][0] + B, - a * self.base_polygon.points[i][1] + C
+        self.polygon.bbox = (
+            a * self.base_polygon.bbox[0] + B,
+            - a * self.base_polygon.bbox[1] + C,
+            a * self.base_polygon.bbox[2] + B,
+            - a * self.base_polygon.bbox[3] + C
+        )
 
 
 class Place:
@@ -163,8 +133,10 @@ class Drawer:
 
     def update_and_render(self):
 
-        for region in self.regions: region.render()
-        for place in self.places: place.render()
+        obj_c : int = 0
+        for region in self.regions: obj_c = obj_c + 1 if region.render() > 0 else obj_c
+        for place in self.places: obj_c = obj_c + 1 if place.render() > 0 else obj_c
+        print(obj_c)
 
         for region in self.regions: region.translate(self.a, self.B, self.C)
         for place in self.places: place.translate(self.a, self.B, self.C)
@@ -222,6 +194,8 @@ class Drawer:
         while True:
             event = fltk.donne_ev()
             event_type = fltk.type_ev(event)
+
+            fltk.efface_tout()
 
             self.mouse_pos = fltk.abscisse_souris(), fltk.ordonnee_souris()
 

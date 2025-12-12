@@ -22,23 +22,25 @@ class DataManager:
         info["points"] = shape.points
         info["parts"] = shape.parts
 
-        info["theatre"] = []
+        info["crous"] = []
+
+        pattern : str = str(shape_id) + r"\d{3}"
 
         for metadata in self.data:
-            if int(metadata.get("id_secteur_postal", 0) / 1000) == shape_id:
-                info["theatre"].append({
-                    "longitude" : metadata.get("x",""),
-                    "latitude"  : metadata.get("y",""),
-                    "title" : metadata.get("eq_nom_equipement",""),
-                    "contact": metadata.get("eq_nom_equipement"),
+            if re.search(pattern, metadata["contact"]):
+                info["crous"].append({
+                    "title": metadata.get("title", ""),
+                    "contact": metadata.get("contact", ""),
+                    "infos": metadata.get("infos", ""),
+                    "photo": metadata.get("photo", "")
                 })
-
         return info
 
     def get_multiple(self, shape_ids : List[int]):
 
         data : Tuple[List[Dict], List[Dict]] = [], []
         total_bbox : List[int] = [ 0xffffffff, 0xffffffff, -0xffffffff, -0xffffffff ]
+        pattern : str = r"(?:" + "|".join(map(str, shape_ids)) + r")\d{3}"
 
         for shape_id in shape_ids:
             shape : shapefile.Polygon = self.sf.shape(shape_id)
@@ -53,17 +55,20 @@ class DataManager:
             if shape.bbox[2] > total_bbox[2]: total_bbox[2] = shape.bbox[2]
             if shape.bbox[3] > total_bbox[3]: total_bbox[3] = shape.bbox[3]
 
-        with open("theatres-et-salles-de-spectacles.json") as f:
-            all_metadata : Dict =json.load(f)
-            for metadata in all_metadata:
-                if int(metadata.get("id_secteur_postal", 0) / 1000) in shape_ids:
+        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
+            all_metadata : Dict = json.load(f)
+
+            for metadata in all_metadata: # each metadata is a dict
+                if re.search(pattern, metadata.get("contact", "")):
                     data[1].append({
-                        "longitude": metadata.get("x", ""),
-                        "latitude": metadata.get("y", ""),
-                        "title" : metadata.get("eq_nom_equipement",""),
-                        "contact": metadata.get("eq_nom_equipement"),
+                        "longitude": metadata["geolocalisation"].get("lon", ""),
+                        "latitude": metadata["geolocalisation"].get("lat", ""),
+                        "title": metadata.get("title", ""),
+                        "contact": metadata.get("contact", ""),
+                        "infos": metadata.get("infos", ""),
+                        "photo": metadata.get("photo", "")
                     })
-                
+
         return data
 
     def get_all(self):
@@ -77,15 +82,17 @@ class DataManager:
                 "parts": shape.parts
             })
 
-        with open("theatres-et-salles-de-spectacles.json") as f:
-            all_metadata : Dict =json.load(f)
+        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
+            all_metadata : Dict = json.load(f)
 
             for metadata in all_metadata: # each metadata is a dict
                 data[1].append({
-                    "longitude": metadata.get("x", ""),
-                    "latitude": metadata.get("y", ""),
-                    "title" : metadata.get("eq_nom_equipement",""),
-                    "contact": metadata.get("eq_nom_equipement"),
+                    "longitude": metadata["geolocalisation"].get("lon", ""),
+                    "latitude": metadata["geolocalisation"].get("lat", ""),
+                    "title": metadata.get("title", ""),
+                    "contact": metadata.get("contact", ""),
+                    "infos": metadata.get("infos", ""),
+                    "photo": metadata.get("photo", "")
                 })
 
         return data
