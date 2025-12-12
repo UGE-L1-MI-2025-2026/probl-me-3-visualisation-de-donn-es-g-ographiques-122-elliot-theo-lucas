@@ -151,7 +151,7 @@ class Drawer:
         self.map_velocity = self.map_velocity[0] * 0.93, self.map_velocity[1] * 0.93
 
 
-    def run_subwindow(metadata : Dict[str, str]) -> int:
+    def run_subwindow(self, metadata : Dict[str, str]) -> int:
 
         while True:
             event = fltk.donne_ev()
@@ -163,14 +163,13 @@ class Drawer:
             fltk.texte(50, 80, f"Contact : {metadata.get('contact', '')}", "black")
             fltk.texte(50, 110, f"Infos : {metadata.get('infos', '')}", "black")
 
-            fltk.texte(50, 300, "Appuyez sur Échap pour revenir à la carte.", "red")
+            fltk.texte(50, 300, "Appuyez sur une touche pour revenir à la carte.", "red")
 
-            fltk.mise_a_jour()
-
-            if event_type == "Touche":
-                if fltk.touche(event): return 0
+            if event_type == "Touche": return 0
 
             if event_type == "Quitte": return 1
+
+            fltk.mise_a_jour()
 
 
 
@@ -190,8 +189,8 @@ class Drawer:
 
             if event_type == "ClicGauche":
                 metadata = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
-
-                if self.run_subwindow(metadata) > 0: break
+                if metadata: 
+                    if self.run_subwindow(metadata) > 0: break
 
             elif event_type == "Redimension":
                 Drawer.WINDOW_SIZE = fltk.largeur_fenetre(), fltk.hauteur_fenetre()
