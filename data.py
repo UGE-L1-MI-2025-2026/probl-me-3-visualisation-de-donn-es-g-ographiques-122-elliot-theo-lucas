@@ -22,18 +22,19 @@ class DataManager:
         info["points"] = shape.points
         info["parts"] = shape.parts
 
-        info["crous"] = []
+        info["theatre"] = []
 
         pattern : str = str(shape_id) + r"\d{3}"
 
         for metadata in self.data:
-            if re.search(pattern, metadata["contact"]):
-                info["crous"].append({
-                    "title": metadata.get("title", ""),
-                    "contact": metadata.get("contact", ""),
-                    "infos": metadata.get("infos", ""),
-                    "photo": metadata.get("photo", "")
+            if int(metadata.get("id_secteur_postal", 0) / 1000) == shape_id:
+                info["theatre"].append({
+                    "longitude" : metadata.get("x",""),
+                    "latitude"  : metadata.get("y",""),
+                    "title" : metadata.get("eq_nom_equipement",""),
+                    "contact": metadata.get("eq_nom_equipement"),
                 })
+
         return info
 
     def get_multiple(self, shape_ids : List[int]):
@@ -62,12 +63,22 @@ class DataManager:
                     "longitude" : metadata.get("x",""),
                     "latitude"  : metadata.get("y",""),
                     "title" : metadata.get("eq_nom_equipement",""),
-                    "contact": metadata.get("eq_nom_equipement",""),
-                    "infos": metadata.get("eq_ville",""),
-
+                    "contact": metadata.get("eq_nom_equipement"),
                 })
 
+        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
+            all_metadata : Dict = json.load(f)
 
+            for metadata in all_metadata: # each metadata is a dict
+                if int(metadata.get("id_secteur_postal", 0) / 1000) in shape_ids:
+                    data[1].append({
+                        "longitude": metadata["geolocaisation"].get("lon", ""),
+                        "latitude": metadata["geolocalisation"].get("lat", ""),
+                        "title": metadata.get("title", ""),
+                        "contact": metadata.get("contact", ""),
+                        "infos": metadata.get("infos", ""),
+                        "photo": metadata.get("photo", "")
+                    })
 
         return data
 
