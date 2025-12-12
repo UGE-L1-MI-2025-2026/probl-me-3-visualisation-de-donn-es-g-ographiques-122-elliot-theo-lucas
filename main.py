@@ -7,7 +7,7 @@ if __name__ == "__main__":
     drawer = Drawer()
     data_manager = DataManager()
 
-    idf = data_manager.get_multiple([ 75,77,78,91,92,93,94,95 ])
+    idf = data_manager.get_all()
 
     for dep in idf[0]:
         drawer.regions.append(Region(data_manager.mercarize_points(dep["points"]), data_manager.mercarize_bbox(dep["bbox"])))
@@ -16,4 +16,3 @@ if __name__ == "__main__":
         drawer.places.append(Place((crous["longitude"], data_manager.mercarize_int(crous["latitude"])), 5, crous))
 
     drawer.run()
-    
