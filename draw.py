@@ -65,7 +65,21 @@ class CirclePrimitive:
         self.colour : str = colour
         self.fill : str = fill
 
+        self.circle : int = -1
+
     def render(self) -> int:
+        if self.circle > -1:
+            self.moveTo(self.position)
+        else:
+            self.__rerender()
+
+    def moveTo(self, target : Tuple[int, int]):
+        differential : Tuple[int, int] = target[0] - self.bbox[0], target[1] - self.bbox[1]
+        fltk.deplace(self.circle, differential[0], differential[1])
+        self.position = target
+        return 0
+
+    def __rerender(self) -> int: 
         return fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
 
 
