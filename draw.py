@@ -72,15 +72,18 @@ class CirclePrimitive:
             self.moveTo(self.position)
         else:
             self.__rerender()
+        return 0
 
     def moveTo(self, target : Tuple[int, int]):
         differential : Tuple[int, int] = target[0] - self.bbox[0], target[1] - self.bbox[1]
         fltk.deplace(self.circle, differential[0], differential[1])
         self.position = target
+        print(self.position)
         return 0
 
     def __rerender(self) -> int: 
-        return fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
+        self.circle = fltk.cercle(self.position[0], self.position[1], self.radius, couleur = self.colour, remplissage = self.fill)
+        return 0
 
 
 class Region:
@@ -152,12 +155,6 @@ class Drawer:
         )
         self.B, self.C = target_box[0] - self.a * all_bbox[0], target_box[1] + self.a * all_bbox[3]
 
-    def affiche_infos(self, restaurant):
-        fltk.efface_tout()
-        fltk.texte(50, 50, f"Nom : {restaurant['title']}", "black")
-        fltk.texte(50, 80, f"Contact : {restaurant['contact']}", "black")
-        fltk.texte(50, 110, f"Infos : {restaurant['infos']}", "black")
-        
 
     def get_infos_from_click(self, client_x, client_y):
         for place in self.places:

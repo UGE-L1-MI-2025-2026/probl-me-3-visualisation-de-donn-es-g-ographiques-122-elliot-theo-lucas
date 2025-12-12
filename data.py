@@ -58,8 +58,8 @@ class DataManager:
             for metadata in all_metadata:
                 if int(metadata.get("id_secteur_postal", 0) / 1000) in shape_ids:
                     data[1].append({
-                        "longitude": metadata["geolocaisation"].get("lon", ""),
-                        "latitude": metadata["geolocalisation"].get("lat", ""),
+                        "longitude": metadata.get("x", ""),
+                        "latitude": metadata.get("y", ""),
                         "title" : metadata.get("eq_nom_equipement",""),
                         "contact": metadata.get("eq_nom_equipement"),
                     })
@@ -82,8 +82,8 @@ class DataManager:
 
             for metadata in all_metadata: # each metadata is a dict
                 data[1].append({
-                    "longitude": metadata["geolocaisation"].get("lon", ""),
-                    "latitude": metadata["geolocalisation"].get("lat", ""),
+                    "longitude": metadata.get("x", ""),
+                    "latitude": metadata.get("y", ""),
                     "title" : metadata.get("eq_nom_equipement",""),
                     "contact": metadata.get("eq_nom_equipement"),
                 })
