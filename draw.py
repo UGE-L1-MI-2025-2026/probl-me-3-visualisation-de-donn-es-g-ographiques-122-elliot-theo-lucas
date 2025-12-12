@@ -150,6 +150,18 @@ class Drawer:
         self.C -= self.map_velocity[1]
         self.map_velocity = self.map_velocity[0] * 0.93, self.map_velocity[1] * 0.93
 
+    def affiche_infos(self, restaurant):
+        fltk.efface_tout()
+
+        fltk.texte(50, 50, f"Nom : {restaurant.get('title', '')}", "black")
+        fltk.texte(50, 80, f"Contact : {restaurant.get('contact', '')}", "black")
+        fltk.texte(50, 110, f"Infos : {restaurant.get('infos', '')}", "black")
+
+        fltk.texte(50, 300, "Appuyez sur Échap pour revenir à la carte.", "red")
+
+        fltk.mise_a_jour()
+
+
 
     def run(self):
 
@@ -166,14 +178,20 @@ class Drawer:
 
             if event_type == "ClicGauche":
                 metadata = self.get_infos_from_click(fltk.abscisse(event), fltk.ordonnee(event))
-                while True:
-                    ev = fltk.attend_ev()
-                    tev = fltk.type_ev(ev)
-                    if tev == "Touche":
-                        tch = fltk.touche(ev)
-                        if tch == "Escape": break
-                    if tev=="Quitte": break
-                fltk.mise_a_jour()
+
+                if metadata:
+
+                    self.affiche_infos(metadata)
+
+
+                    while True:
+                        ev = fltk.attend_ev()
+                        tev = fltk.type_ev(ev)
+                        if tev == "Touche" and fltk.touche(ev) == "Escape":
+                            break
+                        if tev == "Quitte":
+                            return
+
 
             elif event_type == "Redimension":
                 Drawer.WINDOW_SIZE = fltk.largeur_fenetre(), fltk.hauteur_fenetre()
