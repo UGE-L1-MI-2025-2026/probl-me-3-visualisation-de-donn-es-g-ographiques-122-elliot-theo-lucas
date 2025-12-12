@@ -55,19 +55,19 @@ class DataManager:
             if shape.bbox[2] > total_bbox[2]: total_bbox[2] = shape.bbox[2]
             if shape.bbox[3] > total_bbox[3]: total_bbox[3] = shape.bbox[3]
 
-        with open("ensemble-des-lieux-de-restauration-des-crous.json") as f:
-            all_metadata : Dict = json.load(f)
+        with open("theatres-et-salles-de-spectacles.json") as f:
+            all_metadata : Dict =json.load(f)
+            for metadata in all_metadata:
+                data[1].append({
+                    "longitude" : metadata.get("x",""),
+                    "latitude"  : metadata.get("y",""),
+                    "title" : metadata.get("eq_nom_equipement",""),
+                    "contact": metadata.get("eq_nom_equipement",""),
+                    "infos": metadata.get("eq_ville",""),
 
-            for metadata in all_metadata: # each metadata is a dict
-                if re.search(pattern, metadata.get("contact", "")):
-                    data[1].append({
-                        "longitude": metadata["geolocalisation"].get("lon", ""),
-                        "latitude": metadata["geolocalisation"].get("lat", ""),
-                        "title": metadata.get("title", ""),
-                        "contact": metadata.get("contact", ""),
-                        "infos": metadata.get("infos", ""),
-                        "photo": metadata.get("photo", "")
-                    })
+                })
+
+
 
         return data
 
